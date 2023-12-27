@@ -53,6 +53,26 @@ window.addEventListener('keydown', (event) => {
   }
 })
 
+window.addEventListener('touchmove', (e) => {
+  console.log(e.touches[0].clientX, e.touches[0].clientY, 'touchmove')
+  const posX = Math.round(e.touches[0].clientX / unitSize.value) * unitSize.value
+  const posY = Math.round(e.touches[0].clientY / unitSize.value) * unitSize.value
+  const snakeHead = { x: snake.value[0].x + xVelocity, y: snake.value[0].y + yVelocity }
+  if (snakeHead.x < posX) {
+    xVelocity = unitSize.value
+    yVelocity = 0
+  } else if (snakeHead.x > posX) {
+    xVelocity = -unitSize.value
+    yVelocity = 0
+  } else if (snakeHead.y < posY) {
+    xVelocity = 0
+    yVelocity = unitSize.value
+  } else if (snakeHead.y > posY) {
+    xVelocity = 0
+    yVelocity = -unitSize.value
+  }
+})
+
 onMounted(() => {
   resizeCanvas()
 
