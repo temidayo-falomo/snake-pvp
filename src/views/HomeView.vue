@@ -4,9 +4,21 @@ import { onMounted, ref } from 'vue'
 const gameBoard = ref<any>(null)
 const gameWidth = ref(window.innerWidth)
 const gameHeight = ref(window.innerHeight)
-const unitSize = ref(25)
+const unitSize = ref(20)
 const foodX = ref(unitSize.value)
 const foodY = ref(0)
+const running = ref(false)
+const boardBackgroundColor = ref('white')
+const snake = ref([
+  { x: unitSize.value * 4, y: 0 },
+  { x: unitSize.value * 3, y: 0 },
+  { x: unitSize.value * 2, y: 0 },
+  { x: unitSize, y: 0 },
+  { x: 0, y: 0 }
+])
+const score = ref(0)
+let xVelocity = unitSize.value
+let yVelocity = 0
 
 function resizeCanvas() {
   gameWidth.value = window.innerWidth
@@ -15,15 +27,64 @@ function resizeCanvas() {
 }
 
 window.addEventListener('resize', resizeCanvas)
+window.addEventListener('keydown', (event) => {
+  const goingUp = yVelocity == -unitSize.value
+  const goingDown = yVelocity == unitSize.value
+  const goingRight = xVelocity == unitSize.value
+  const goingLeft = xVelocity == -unitSize.value
+
+  switch (true) {
+    case event.key == 'ArrowLeft' && !goingRight:
+      xVelocity = -unitSize.value
+      yVelocity = 0
+      break
+    case event.key == 'ArrowUp' && !goingDown:
+      xVelocity = 0
+      yVelocity = -unitSize.value
+      break
+    case event.key == 'ArrowRight' && !goingLeft:
+      xVelocity = unitSize.value
+      yVelocity = 0
+      break
+    case event.key == 'ArrowDown' && !goingUp:
+      xVelocity = 0
+      yVelocity = unitSize.value
+      break
+  }
+})
 
 onMounted(() => {
   resizeCanvas()
 
-  function startGame() {}
+  function startGame() {
+    running.value = true
+    createFood()
+    drawFood()
+    nextTick()
+  }
 
-  function nextTick() {}
+  function nextTick() {
+    if (running.value) {
+      setTimeout(() => {
+        comeOutOfOtherSide()
+        clearBoard()
+        drawFood()
+        moveSnake()
+        drawSnake()
+        checkGameOver()
+        nextTick()
+      }, 100)
+    } else {
+      displayGameOver()
+    }
+  }
 
-  function clearBoard() {}
+  function clearBoard() {
+    const canvas: any = gameBoard.value
+    const ctx: any = canvas.getContext('2d')
+    ctx.fillStyle = boardBackgroundColor.value
+    ctx.clearRect(0, 0, gameWidth.value, gameHeight.value)
+  }
 
   function createFood() {
     function randomFood(min: number, max: number) {
@@ -34,7 +95,7 @@ onMounted(() => {
     foodX.value = randomFood(0, gameWidth.value - unitSize.value)
     foodY.value = randomFood(0, gameHeight.value - unitSize.value)
 
-    console.log(foodX.value, foodY.value, 'where food')
+    // console.log(foodX.value, foodY.value, 'where food')
   }
 
   function drawFood() {
@@ -46,9 +107,29 @@ onMounted(() => {
     ctx.fillRect(foodX.value, foodY.value, unitSize.value, unitSize.value)
   }
 
-  function moveSnake() {}
+  function moveSnake() {
+    const snakeHead = { x: snake.value[0].x + xVelocity, y: snake.value[0].y + yVelocity }
+    snake.value.unshift(snakeHead)
+    // console.log(snakeHead, 'snakeHead')
 
-  function drawSnake() {}
+    if (snakeHead.x == foodX.value && snakeHead.y == foodY.value) {
+      score.value += 1
+      createFood()
+    } else {
+      snake.value.pop()
+    }
+  }
+
+  function drawSnake() {
+    const canvas: any = gameBoard.value
+    const ctx: any = canvas.getContext('2d')
+    ctx.fillStyle = 'green'
+    ctx.strokeStyle = 'black'
+    snake.value.forEach((snakePart: any) => {
+      ctx.fillRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)
+      ctx.strokeRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)
+    })
+  }
 
   function changeDirection() {}
 
@@ -56,10 +137,29 @@ onMounted(() => {
 
   function displayGameOver() {}
 
+  function comeOutOfOtherSide() {
+    const snakeHead = { x: snake.value[0].x + xVelocity, y: snake.value[0].y + yVelocity }
+    switch (true) {
+      case snake.value[0].x < 0:
+        snake.value[0].x = Math.floor(gameWidth.value / unitSize.value) * unitSize.value
+        break
+      case snake.value[0].x >= gameWidth.value:
+        snake.value[0].x = 0
+        break
+      case snake.value[0].y < 0:
+        snake.value[0].y = Math.floor(gameHeight.value / unitSize.value) * unitSize.value
+        break
+      case snake.value[0].y >= gameHeight.value:
+        snake.value[0].y = 0
+        break
+    }
+  }
+
   function resetGame() {}
 
-  createFood()
-  drawFood()
+  // createFood()
+  // drawFood()
+  startGame()
 })
 </script>
 
