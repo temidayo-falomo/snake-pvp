@@ -23,7 +23,6 @@ let yVelocity = 0
 function resizeCanvas() {
   gameWidth.value = window.innerWidth
   gameHeight.value = window.innerHeight
-  console.log(gameWidth.value, gameHeight.value, 'width and height')
 }
 
 window.addEventListener('resize', resizeCanvas)
@@ -58,18 +57,25 @@ window.addEventListener('touchmove', (e) => {
   const posX = Math.round(e.touches[0].clientX / unitSize.value) * unitSize.value
   const posY = Math.round(e.touches[0].clientY / unitSize.value) * unitSize.value
   const snakeHead = { x: snake.value[0].x + xVelocity, y: snake.value[0].y + yVelocity }
-  if (snakeHead.x < posX) {
-    xVelocity = unitSize.value
-    yVelocity = 0
-  } else if (snakeHead.x > posX) {
-    xVelocity = -unitSize.value
-    yVelocity = 0
-  } else if (snakeHead.y < posY) {
-    xVelocity = 0
-    yVelocity = unitSize.value
-  } else if (snakeHead.y > posY) {
-    xVelocity = 0
-    yVelocity = -unitSize.value
+  console.log(posX, posY, 'posX, posY', unitSize.value, 'unitSize.value', snakeHead, 'snakeHead')
+
+  switch (true) {
+    case posX < snakeHead.x:
+      xVelocity = -unitSize.value
+      yVelocity = 0
+      break
+    case posY < snakeHead.y:
+      xVelocity = 0
+      yVelocity = -unitSize.value
+      break
+    case posX > snakeHead.x:
+      xVelocity = unitSize.value
+      yVelocity = 0
+      break
+    case posY > snakeHead.y:
+      xVelocity = 0
+      yVelocity = unitSize.value
+      break
   }
 })
 
@@ -143,9 +149,13 @@ onMounted(() => {
   function drawSnake() {
     const canvas: any = gameBoard.value
     const ctx: any = canvas.getContext('2d')
-    ctx.fillStyle = 'green'
-    ctx.strokeStyle = 'black'
     snake.value.forEach((snakePart: any) => {
+      if (snakePart == snake.value[0]) {
+        ctx.fillStyle = 'green'
+      } else {
+        ctx.fillStyle = 'lightgreen'
+        ctx.strokeStyle = 'darkgreen'
+      }
       ctx.fillRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)
       ctx.strokeRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)
     })
@@ -158,7 +168,6 @@ onMounted(() => {
   function displayGameOver() {}
 
   function comeOutOfOtherSide() {
-    const snakeHead = { x: snake.value[0].x + xVelocity, y: snake.value[0].y + yVelocity }
     switch (true) {
       case snake.value[0].x < 0:
         snake.value[0].x = Math.floor(gameWidth.value / unitSize.value) * unitSize.value
@@ -174,11 +183,6 @@ onMounted(() => {
         break
     }
   }
-
-  function resetGame() {}
-
-  // createFood()
-  // drawFood()
   startGame()
 })
 </script>
