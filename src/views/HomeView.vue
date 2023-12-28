@@ -16,6 +16,14 @@ const snake = ref([
   { x: unitSize, y: 0 },
   { x: 0, y: 0 }
 ])
+
+const otherSnake = ref([
+  { x: unitSize.value * 5, y: 180 },
+  { x: unitSize.value * 4, y: 180 },
+  { x: unitSize.value * 3, y: 180 },
+  { x: unitSize.value * 2, y: 180 },
+  { x: unitSize, y: 180 }
+])
 const score = ref(0)
 let xVelocity = unitSize.value
 let yVelocity = 0
@@ -97,6 +105,7 @@ onMounted(() => {
         drawFood()
         moveSnake()
         drawSnake()
+        drawOtherSnake()
         checkGameOver()
         nextTick()
       }, 100)
@@ -155,6 +164,21 @@ onMounted(() => {
       } else {
         ctx.fillStyle = 'lightgreen'
         ctx.strokeStyle = 'darkgreen'
+      }
+      ctx.fillRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)
+      ctx.strokeRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)
+    })
+  }
+
+  function drawOtherSnake() {
+    const canvas: any = gameBoard.value
+    const ctx: any = canvas.getContext('2d')
+    otherSnake.value.forEach((snakePart: any) => {
+      if (snakePart == otherSnake.value[0]) {
+        ctx.fillStyle = 'royalblue'
+      } else {
+        ctx.fillStyle = 'orange'
+        // ctx.strokeStyle = 'red'
       }
       ctx.fillRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)
       ctx.strokeRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)

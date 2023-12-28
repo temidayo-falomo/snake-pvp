@@ -10,13 +10,13 @@ body {
 }
 
 body {
-  height: 100vh;
+  /* height: 100vh;
   display: flex;
   place-content: center;
   align-items: center;
   justify-content: center;
+  overflow: hidden; */
 }
-
 
 canvas {
   display: block;
