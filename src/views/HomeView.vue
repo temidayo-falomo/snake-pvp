@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { collection, doc, getDoc, getDocs, updateDoc } from 'firebase/firestore'
+import { onMounted, reactive, ref } from 'vue'
+import { db } from '@/firebase/index'
 
 const gameBoard = ref<any>(null)
 const gameWidth = ref(window.innerWidth)
@@ -9,13 +11,7 @@ const foodX = ref(unitSize.value)
 const foodY = ref(0)
 const running = ref(false)
 const boardBackgroundColor = ref('white')
-const snake = ref([
-  { x: unitSize.value * 4, y: 0 },
-  { x: unitSize.value * 3, y: 0 },
-  { x: unitSize.value * 2, y: 0 },
-  { x: unitSize, y: 0 },
-  { x: 0, y: 0 }
-])
+const snake = ref([{ x: -20, y: -20 }])
 
 const otherSnake = ref([
   { x: unitSize.value * 5, y: 180 },
@@ -39,6 +35,7 @@ window.addEventListener('keydown', (event) => {
   const goingDown = yVelocity == unitSize.value
   const goingRight = xVelocity == unitSize.value
   const goingLeft = xVelocity == -unitSize.value
+  const userDoc = doc(db, 'users', 'gC6N1GoEfvH1p3znvozD')
 
   switch (true) {
     case event.key == 'ArrowLeft' && !goingRight:
@@ -58,6 +55,17 @@ window.addEventListener('keydown', (event) => {
       yVelocity = unitSize.value
       break
   }
+
+  const handleUpdate = async () => {
+    await updateDoc(userDoc, {
+      snake: snake.value,
+      yVelocity: yVelocity,
+      xVelocity: xVelocity,
+      unitSize: unitSize.value
+    })
+  }
+
+  handleUpdate()
 })
 
 window.addEventListener('touchmove', (e) => {
@@ -85,6 +93,18 @@ window.addEventListener('touchmove', (e) => {
       yVelocity = unitSize.value
       break
   }
+})
+
+onMounted(() => {
+  const getUser = async () => {
+    const userDoc = doc(db, 'users', 'gC6N1GoEfvH1p3znvozD')
+    const userSnapshot = await getDoc(userDoc)
+    snake.value = userSnapshot.data()?.snake
+    yVelocity = userSnapshot.data()?.yVelocity
+    xVelocity = userSnapshot.data()?.xVelocity
+    unitSize.value = userSnapshot.data()?.unitSize
+  }
+  getUser()
 })
 
 onMounted(() => {
@@ -209,6 +229,8 @@ onMounted(() => {
   }
   startGame()
 })
+
+//All dirs should come from be
 </script>
 
 <template>
