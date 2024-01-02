@@ -73,11 +73,12 @@ window.addEventListener('keydown', (event) => {
 })
 
 window.addEventListener('touchmove', (e) => {
-  console.log(e.touches[0].clientX, e.touches[0].clientY, 'touchmove')
+  // console.log(e.touches[0].clientX, e.touches[0].clientY, 'touchmove')
   const posX = Math.round(e.touches[0].clientX / unitSize.value) * unitSize.value
   const posY = Math.round(e.touches[0].clientY / unitSize.value) * unitSize.value
   const snakeHead = { x: snake.value[0].x + xVelocity, y: snake.value[0].y + yVelocity }
-  console.log(posX, posY, 'posX, posY', unitSize.value, 'unitSize.value', snakeHead, 'snakeHead')
+  // console.log(posX, posY, 'posX, posY', unitSize.value, 'unitSize.value', snakeHead, 'snakeHead')
+  const userDoc = doc(db, 'users', 'f9Doy6Jc0GPyUf2W6EFh')
 
   switch (true) {
     case posX < snakeHead.x:
@@ -97,6 +98,17 @@ window.addEventListener('touchmove', (e) => {
       yVelocity = unitSize.value
       break
   }
+
+  const handleUpdate = async () => {
+    await updateDoc(userDoc, {
+      snake: snake.value,
+      yVelocity: yVelocity,
+      xVelocity: xVelocity,
+      unitSize: unitSize.value
+    })
+  }
+
+  handleUpdate()
 })
 
 const getUser = async () => {
