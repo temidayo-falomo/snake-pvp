@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { collection, doc, getDoc, getDocs, updateDoc } from 'firebase/firestore'
-import { onMounted, reactive, ref } from 'vue'
+import {  doc, onSnapshot, updateDoc } from 'firebase/firestore'
+import { onMounted, ref } from 'vue'
 import { db } from '@/firebase/index'
 
 const gameBoard = ref<any>(null)
@@ -11,7 +11,7 @@ const foodX = ref(unitSize.value)
 const foodY = ref(0)
 const running = ref(false)
 const boardBackgroundColor = ref('white')
-const snake = ref([{ x: -20, y: -20 }])
+const snake = ref([{ x: -240, y: -240 }])
 
 const otherSnake = ref([
   { x: unitSize.value * 5, y: 180 },
@@ -95,16 +95,20 @@ window.addEventListener('touchmove', (e) => {
   }
 })
 
-onMounted(() => {
-  const getUser = async () => {
-    const userDoc = doc(db, 'users', 'gC6N1GoEfvH1p3znvozD')
-    const userSnapshot = await getDoc(userDoc)
+const getUser = async () => {
+  const userDoc = doc(db, 'users', 'gC6N1GoEfvH1p3znvozD')
+  onSnapshot(userDoc, (userSnapshot) => {
+    console.log('yyaaaa');
+    
     snake.value = userSnapshot.data()?.snake
     yVelocity = userSnapshot.data()?.yVelocity
     xVelocity = userSnapshot.data()?.xVelocity
     unitSize.value = userSnapshot.data()?.unitSize
-  }
-  getUser()
+  })
+}
+
+onMounted(async () => {
+  await getUser()
 })
 
 onMounted(() => {
@@ -229,12 +233,12 @@ onMounted(() => {
   }
   startGame()
 })
-
-//All dirs should come from be
 </script>
 
 <template>
   <main>
-    <canvas id="gameBoard" ref="gameBoard" :height="gameHeight" :width="gameWidth"></canvas>
+    <canvas id="gameBoard" ref="gameBoard" :height="gameHeight" :width="gameWidth">
+      <button>Hello</button></canvas
+    >
   </main>
 </template>
