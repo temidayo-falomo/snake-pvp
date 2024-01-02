@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {  doc, onSnapshot, updateDoc } from 'firebase/firestore'
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore'
 import { onMounted, ref } from 'vue'
 import { db } from '@/firebase/index'
 
@@ -7,6 +7,7 @@ const gameBoard = ref<any>(null)
 const gameWidth = ref(window.innerWidth)
 const gameHeight = ref(window.innerHeight)
 const unitSize = ref(20)
+const otherSnakeUnitSize = ref(20)
 const foodX = ref(unitSize.value)
 const foodY = ref(0)
 const running = ref(false)
@@ -24,6 +25,9 @@ const score = ref(0)
 let xVelocity = unitSize.value
 let yVelocity = 0
 
+let otherSnakeXVelocity = otherSnakeUnitSize.value
+let otherSnakeYVelocity = 0
+
 function resizeCanvas() {
   gameWidth.value = window.innerWidth
   gameHeight.value = window.innerHeight
@@ -35,7 +39,7 @@ window.addEventListener('keydown', (event) => {
   const goingDown = yVelocity == unitSize.value
   const goingRight = xVelocity == unitSize.value
   const goingLeft = xVelocity == -unitSize.value
-  const userDoc = doc(db, 'users', 'gC6N1GoEfvH1p3znvozD')
+  const userDoc = doc(db, 'users', 'f9Doy6Jc0GPyUf2W6EFh')
 
   switch (true) {
     case event.key == 'ArrowLeft' && !goingRight:
@@ -96,10 +100,11 @@ window.addEventListener('touchmove', (e) => {
 })
 
 const getUser = async () => {
-  const userDoc = doc(db, 'users', 'gC6N1GoEfvH1p3znvozD')
+  //f9Doy6Jc0GPyUf2W6EFh
+  const userDoc = doc(db, 'users', 'f9Doy6Jc0GPyUf2W6EFh')
   onSnapshot(userDoc, (userSnapshot) => {
-    console.log('yyaaaa');
-    
+    console.log('yyaaaa')
+
     snake.value = userSnapshot.data()?.snake
     yVelocity = userSnapshot.data()?.yVelocity
     xVelocity = userSnapshot.data()?.xVelocity
@@ -107,8 +112,42 @@ const getUser = async () => {
   })
 }
 
+const getOtherUser = async () => {
+  const userDoc = doc(db, 'users', 'gC6N1GoEfvH1p3znvozD')
+  onSnapshot(userDoc, (userSnapshot) => {
+    console.log(userSnapshot.data()?.snake, 'otherSnake')
+
+    otherSnake.value = userSnapshot.data()?.snake || [
+      {
+        x: unitSize.value * 5,
+        y: 180
+      },
+      {
+        x: unitSize.value * 4,
+        y: 180
+      },
+      {
+        x: unitSize.value * 3,
+        y: 180
+      },
+      {
+        x: unitSize.value * 2,
+        y: 180
+      },
+      {
+        x: unitSize,
+        y: 180
+      }
+    ]
+    otherSnakeYVelocity = userSnapshot.data()?.yVelocity || 0
+    otherSnakeXVelocity = userSnapshot.data()?.xVelocity || 0
+    otherSnakeUnitSize.value = userSnapshot.data()?.unitSize || 20
+  })
+}
+
 onMounted(async () => {
   await getUser()
+  await getOtherUser()
 })
 
 onMounted(() => {
@@ -125,9 +164,11 @@ onMounted(() => {
     if (running.value) {
       setTimeout(() => {
         comeOutOfOtherSide()
+        comeOutOfOtherSideOtherSnake()
         clearBoard()
         drawFood()
         moveSnake()
+        moveOtherSnake()
         drawSnake()
         drawOtherSnake()
         checkGameOver()
@@ -179,6 +220,22 @@ onMounted(() => {
     }
   }
 
+  function moveOtherSnake() {
+    const snakeHead = {
+      x: otherSnake.value[0].x + otherSnakeXVelocity,
+      y: otherSnake.value[0].y + otherSnakeYVelocity
+    }
+    otherSnake.value.unshift(snakeHead)
+    // console.log(snakeHead, 'snakeHead')
+
+    if (snakeHead.x == foodX.value && snakeHead.y == foodY.value) {
+      score.value += 1
+      createFood()
+    } else {
+      otherSnake.value.pop()
+    }
+  }
+
   function drawSnake() {
     const canvas: any = gameBoard.value
     const ctx: any = canvas.getContext('2d')
@@ -204,8 +261,8 @@ onMounted(() => {
         ctx.fillStyle = 'orange'
         // ctx.strokeStyle = 'red'
       }
-      ctx.fillRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)
-      ctx.strokeRect(snakePart.x, snakePart.y, unitSize.value, unitSize.value)
+      ctx.fillRect(snakePart.x, snakePart.y, otherSnakeUnitSize.value, otherSnakeUnitSize.value)
+      ctx.strokeRect(snakePart.x, snakePart.y, otherSnakeUnitSize.value, otherSnakeUnitSize.value)
     })
   }
 
@@ -231,14 +288,31 @@ onMounted(() => {
         break
     }
   }
+
+  function comeOutOfOtherSideOtherSnake() {
+    switch (true) {
+      case otherSnake.value[0].x < 0:
+        otherSnake.value[0].x =
+          Math.floor(gameWidth.value / otherSnakeUnitSize.value) * otherSnakeUnitSize.value
+        break
+      case otherSnake.value[0].x >= gameWidth.value:
+        otherSnake.value[0].x = 0
+        break
+      case otherSnake.value[0].y < 0:
+        otherSnake.value[0].y =
+          Math.floor(gameHeight.value / otherSnakeUnitSize.value) * otherSnakeUnitSize.value
+        break
+      case otherSnake.value[0].y >= gameHeight.value:
+        otherSnake.value[0].y = 0
+        break
+    }
+  }
   startGame()
 })
 </script>
 
 <template>
   <main>
-    <canvas id="gameBoard" ref="gameBoard" :height="gameHeight" :width="gameWidth">
-      <button>Hello</button></canvas
-    >
+    <canvas id="gameBoard" ref="gameBoard" :height="gameHeight" :width="gameWidth"></canvas>
   </main>
 </template>
